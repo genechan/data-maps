@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 import { systemsData } from "@/data/systemData";
 import { System } from "@/types";
 import {
@@ -11,6 +10,30 @@ import {
   groupBySystemType,
   groupByDataUse,
 } from "@/utils";
+
+// Material UI imports
+import {
+  Container,
+  Typography,
+  Box,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  Fade,
+  Divider,
+  SelectChangeEvent,
+  Grid,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const Home: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
@@ -40,83 +63,164 @@ const Home: React.FC = () => {
     return acc;
   }, {} as Record<string, System[]>);
 
+  const handleFilterChange = (event: SelectChangeEvent) => {
+    setFilterCategory(event.target.value || null);
+  };
+
+  const handleGroupByChange = (event: SelectChangeEvent) => {
+    const value = event.target.value as
+      | "system_type"
+      | (typeof uniqueDataUses)[number];
+    setGroupBy(value);
+  };
+
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4">Interactive Data Map</h1>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h3" component="h1" gutterBottom fontWeight="bold">
+        Interactive Data Map
+      </Typography>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-8">
-        <label className="flex flex-col">
-          <span className="text-sm font-medium mb-1">Filter</span>
-          <select
-            className="border p-2 rounded"
-            onChange={(e) => setFilterCategory(e.target.value || null)}
+      <Box sx={{ display: "flex", gap: 3, mb: 4, flexWrap: "wrap" }}>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="filter-category-label" shrink={true}>
+            Filter by Data Category
+          </InputLabel>
+          <Select
+            labelId="filter-category-label"
+            value={filterCategory || ""}
+            label="Filter by Data Category"
+            onChange={handleFilterChange}
           >
-            <option value="">Filter by Data Category</option>
+            <MenuItem value="">All Categories</MenuItem>
             {uniqueCategories.map((category) => (
-              <option key={category} value={category}>
+              <MenuItem key={category} value={category}>
                 {category}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-        </label>
-        <label className="flex flex-col">
-          <span className="text-sm font-medium mb-1">Group By</span>
-          <select
-            className="border p-2 rounded"
-            onChange={(e) => {
-              const value = e.target.value as
-                | "system_type"
-                | (typeof uniqueDataUses)[number];
-              setGroupBy(value);
-            }}
+          </Select>
+        </FormControl>
+
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="group-by-label">Group By</InputLabel>
+          <Select
+            labelId="group-by-label"
+            value={groupBy}
+            label="Group By"
+            onChange={handleGroupByChange}
           >
-            <option value="system_type">Group by System Type</option>
+            <MenuItem value="system_type">System Type</MenuItem>
             {uniqueDataUses.map((dataUse, index) => (
-              <option key={index} value={`data_use.${dataUse}`}>
-                Group by Data use, {dataUse}
-              </option>
+              <MenuItem key={index} value={`data_use.${dataUse}`}>
+                Data use: {dataUse}
+              </MenuItem>
             ))}
-          </select>
-        </label>
-      </div>
+          </Select>
+        </FormControl>
+      </Box>
 
       {/* Render Systems */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <Grid container spacing={3}>
         {Object.entries(groupedSystems).map(([group, systems]) => (
-          <div key={group} className="border p-4 rounded shadow">
-            <h2 className="text-xl font-semibold mb-4">{group}</h2>
-            {systems.map((system, index) => (
-              <motion.div
-                key={`${system.fides_key}-${index}`}
-                className="border p-4 rounded mb-4 bg-gray-100"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <h3 className="text-lg font-bold">{system.name}</h3>
-                <p className="text-sm text-gray-600">{system.description}</p>
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-blue-500">
-                    Privacy Declarations
-                  </summary>
-                  <ul className="list-disc ml-4">
-                    {system.privacy_declarations.map((declaration, index) => (
-                      <li key={index}>
-                        <strong>{declaration.name}:</strong>{" "}
-                        {declaration.data_categories
-                          .map((category) => category.split(".").pop())
-                          .join(", ")}
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              </motion.div>
-            ))}
-          </div>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={group}>
+            <Card variant="outlined" sx={{ height: "100%" }}>
+              <CardContent>
+                <Typography
+                  variant="h5"
+                  component="h2"
+                  gutterBottom
+                  fontWeight="medium"
+                >
+                  {group}
+                </Typography>
+                <Box sx={{ mt: 2 }}>
+                  {systems.map((system, index) => (
+                    <Fade
+                      in={true}
+                      key={`${system.fides_key}-${index}`}
+                      timeout={500}
+                      style={{ transitionDelay: `${index * 100}ms` }}
+                    >
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          mb: 2,
+                          bgcolor: "grey.50",
+                          "&:last-child": { mb: 0 },
+                        }}
+                      >
+                        <CardContent>
+                          <Typography
+                            variant="h6"
+                            component="h3"
+                            fontWeight="bold"
+                          >
+                            {system.name}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mt: 1 }}
+                          >
+                            {system.description}
+                          </Typography>
+
+                          <Accordion
+                            sx={{
+                              mt: 2,
+                              boxShadow: "none",
+                              "&:before": { display: "none" },
+                            }}
+                          >
+                            <AccordionSummary
+                              expandIcon={<ExpandMoreIcon />}
+                              sx={{
+                                p: 0,
+                                color: "primary.main",
+                                "& .MuiAccordionSummary-content": { m: 0 },
+                              }}
+                            >
+                              <Typography>Privacy Declarations</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ p: 0, pt: 1 }}>
+                              <List disablePadding>
+                                {system.privacy_declarations.map(
+                                  (declaration, index) => (
+                                    <React.Fragment key={index}>
+                                      {index > 0 && <Divider component="li" />}
+                                      <ListItem disablePadding sx={{ py: 0.5 }}>
+                                        <ListItemText
+                                          primary={
+                                            <Typography variant="body2">
+                                              <strong>
+                                                {declaration.name}:
+                                              </strong>{" "}
+                                              {declaration.data_categories
+                                                .map((category) =>
+                                                  category.split(".").pop()
+                                                )
+                                                .join(", ")}
+                                            </Typography>
+                                          }
+                                        />
+                                      </ListItem>
+                                    </React.Fragment>
+                                  )
+                                )}
+                              </List>
+                            </AccordionDetails>
+                          </Accordion>
+                        </CardContent>
+                      </Card>
+                    </Fade>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         ))}
-      </div>
-    </div>
+      </Grid>
+    </Container>
   );
 };
 
