@@ -102,7 +102,7 @@ const Home: React.FC = () => {
                     <SystemCard
                       system={system}
                       index={index}
-                      key={system.fides_key}
+                      key={`${system.fides_key}-${index}`}
                     />
                   ))}
                 </Box>
